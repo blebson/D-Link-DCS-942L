@@ -1,5 +1,5 @@
 /**
- *	D-Link DCS-942L v1.1.0
+ *	D-Link DCS-942L v1.1.1
  *  Modified from Generic Camera Device v1.0.07102014
  *
  *  Copyright 2014 patrick@patrickstuart.com
@@ -36,6 +36,7 @@ metadata {
         command "pirOff"
         command "nvOn"
         command "nvOff"
+        command "nvAuto"
         
 	}
 
@@ -72,9 +73,10 @@ metadata {
 			state "on", label: 'PIR On', action: "pirOff", icon: "st.custom.buttons.rec", backgroundColor: "#EE0000", nextState: "toggle"
 		}
         standardTile("nightVision", "device.switch3", width: 1, height: 1, canChangeIcon: false) {
-			state "off", label: 'Night Vision Off', action: "nvOn", icon: "st.Weather.weather14", backgroundColor: "#ffff00", nextState: "toggle"
+			state "off", label: 'Night Vision Off', action: "nvAuto", icon: "st.Weather.weather14", backgroundColor: "#ffff00", nextState: "toggle"
             state "toggle", label:'toggle', action: "", icon: "st.motion.motion.inactive", backgroundColor: "#53a7c0"
-			state "on", label: 'Night Vision On', action: "nvOff", icon: "st.Weather.weather4", backgroundColor: "#4169E1", nextState: "toggle"            
+			state "on", label: 'Night Vision On', action: "nvOff", icon: "st.Weather.weather4", backgroundColor: "#4169E1", nextState: "toggle"  
+            state "auto", label: 'Night Vision Auto', action: "nvOn", icon: "st.motion.motion.active", backgroundColor: "#ccffcc", nextState: "toggle"  
 		}
        controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 1, inactiveLabel: false, range:"(0..100)") {
             state "level", action:"switch level.setLevel"
@@ -149,6 +151,10 @@ def parse(String description) {
         else if (msg.body.contains("mode=day")) {
             log.debug "Night Vision is off"
             sendEvent(name: "switch3", value: "off");
+        }
+        else if (msg.body.contains("mode=auto")) {
+            log.debug "Night Vision is auto"
+            sendEvent(name: "switch3", value: "auto");
         }
     }    
 }
@@ -450,6 +456,12 @@ def nvOn() {
 def nvOff() {
 	log.debug "Disabling Night Vision"
     return nightCmd("day")    
+    
+}
+
+def nvAuto() {
+	log.debug "Automatic Night Vision"
+    return nightCmd("Auto")    
     
 }
 
