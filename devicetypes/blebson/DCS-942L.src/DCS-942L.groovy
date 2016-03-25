@@ -1,5 +1,5 @@
 /**
- *	D-Link DCS-942L v1.1.1
+ *	D-Link DCS-942L v1.2.0
  *  Modified from Generic Camera Device v1.0.07102014
  *
  *  Copyright 2014 patrick@patrickstuart.com
@@ -27,6 +27,7 @@ metadata {
         //attribute "switch1", "string"
         attribute "switch2", "string"
         attribute "switch3", "string"
+        attribute "switch4", "string"
         
         
         
@@ -37,6 +38,8 @@ metadata {
         command "nvOn"
         command "nvOff"
         command "nvAuto"
+        command "vrOn"
+        command "vrOff"
         
 	}
 
@@ -78,12 +81,17 @@ metadata {
 			state "on", label: 'Night Vision On', action: "nvOff", icon: "st.Weather.weather4", backgroundColor: "#4169E1", nextState: "toggle"  
             state "auto", label: 'Night Vision Auto', action: "nvOn", icon: "st.motion.motion.active", backgroundColor: "#ccffcc", nextState: "toggle"  
 		}
-       controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 1, inactiveLabel: false, range:"(0..100)") {
+        standardTile("Video", "device.switch4", width: 1, height: 1, canChangeIcon: false) {
+			state "off", label: 'Video Off', action: "vrOn", icon: "st.Entertainment.entertainment9", backgroundColor: "#ccffcc", nextState: "toggle"
+            state "toggle", label:'toggle', action: "", icon: "st.Entertainment.entertainment9", backgroundColor: "#53a7c0"
+			state "on", label: 'Video On', action: "vrOff", icon: "st.Entertainment.entertainment9", backgroundColor: "#EE0000", nextState: "toggle"
+		}
+       controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 3, inactiveLabel: false, range:"(0..100)") {
             state "level", action:"switch level.setLevel"
         }
         
         main "motion"
-        details(["cameraDetails", "take", "motion", "PIR", "refresh", "nightVision", "levelSliderControl"])
+        details(["cameraDetails", "take", "motion", "PIR", "refresh", "nightVision", "Video", "levelSliderControl"])
     }
 }
 
@@ -104,9 +112,11 @@ def parse(String description) {
     	def body = new String(descMap["body"].decodeBase64())
         log.debug "Body: ${body}"
     }
-    
+        
     if (msg.body) {
     
+    log.debug "Video Recording Enabled: ${msg.body.contains("<record>\n<enable>1</enable>")}"
+    log.debug "Video Recording Disabled: ${msg.body.contains("<record>\n<enable>0</enable>")}"
     //log.debug "Motion Enabled: ${msg.body.contains("enable=yes")}"
     //log.debug "Motion Disabled: ${msg.body.contains("enable=no")}"
     //log.debug "PIR Enabled: ${msg.body.contains("pir=yes")}"
@@ -155,6 +165,15 @@ def parse(String description) {
         else if (msg.body.contains("mode=auto")) {
             log.debug "Night Vision is auto"
             sendEvent(name: "switch3", value: "auto");
+        }
+        
+        if (msg.body.contains("<record>\n<enable>0</enable>")) {
+        	log.debug "Video Recording Disabled"
+            sendEvent(name: "switch4", value: "off");
+        }
+        else if (msg.body.contains("<record>\n<enable>1</enable>")) {
+        	log.debug "Video Recording Enabled"
+            sendEvent(name: "switch4", value: "on");
         }
     }    
 }
@@ -347,10 +366,44 @@ def nightCmd(String attr)
     catch (Exception e) {
     	log.debug "Hit Exception $e on $hubAction"
     }
-  
- 
+   
 }
 
+def videoCmd(int attr)
+{
+	def userpassascii = "${CameraUser}:${CameraPassword}"
+	def userpass = "Basic " + userpassascii.encodeAsBase64().toString()
+    def host = CameraIP 
+    def hosthex = convertIPtoHex(host)
+    def porthex = convertPortToHex(CameraPort)
+    device.deviceNetworkId = "$hosthex:$porthex" 
+    
+    log.debug "The device id configured is: $device.deviceNetworkId"
+    
+    def headers = [:] 
+    headers.put("HOST", "$host:$CameraPort")
+    headers.put("Authorization", userpass)
+    
+    log.debug "The Header is $headers"
+    
+ def path = "cgi/admin/recorder.cgi?recordEnable=${attr}"
+ log.debug "path is: $path"
+  try {
+    def hubAction = new physicalgraph.device.HubAction(
+    	method: "GET",
+    	path: path,
+    	headers: headers
+        )
+        	
+   
+    log.debug hubAction
+    return hubAction
+    
+    }
+    catch (Exception e) {
+    	log.debug "Hit Exception $e on $hubAction"
+    }  
+}
 
 def putImageInS3(map) {
 	log.debug "firing s3"
@@ -463,6 +516,16 @@ def nvAuto() {
 	log.debug "Automatic Night Vision"
     return nightCmd("Auto")    
     
+}
+
+def vrOn() {
+	log.debug "Video Recording On"
+    return videoCmd(1) 
+}
+
+def vrOff() {
+	log.debug "Video Recording Off"
+    return videoCmd(0) 
 }
 
 def refresh(){
