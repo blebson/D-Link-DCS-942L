@@ -115,8 +115,8 @@ def parse(String description) {
         
     if (msg.body) {
     
-    log.debug "Video Recording Enabled: ${msg.body.contains("<record>\n<enable>1</enable>")}"
-    log.debug "Video Recording Disabled: ${msg.body.contains("<record>\n<enable>0</enable>")}"
+    //log.debug "Video Recording Enabled: ${msg.body.contains("<record>\n<enable>1</enable>")}"
+    //log.debug "Video Recording Disabled: ${msg.body.contains("<record>\n<enable>0</enable>")}"
     //log.debug "Motion Enabled: ${msg.body.contains("enable=yes")}"
     //log.debug "Motion Disabled: ${msg.body.contains("enable=no")}"
     //log.debug "PIR Enabled: ${msg.body.contains("pir=yes")}"
