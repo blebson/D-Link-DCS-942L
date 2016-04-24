@@ -623,8 +623,8 @@ def refresh(){
 def start() {
 	log.trace "start()"
 	def dataLiveVideo = [
-		OutHomeURL  : "https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8",
-		InHomeURL   : "https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8",
+		OutHomeURL  : "rtsp://${CameraUser}:${CameraPassword}@${VideoIP}:${VideoPort}/OVProfile00",
+		InHomeURL   : "rtsp://${CameraUser}:${CameraPassword}@${VideoIP}:${VideoPort}/OVProfile00",
 		ThumbnailURL: "http://cdn.device-icons.smartthings.com/camera/dlink-indoor@2x.png",
 		cookie      : [key: "key", value: "value"]
 	]
@@ -668,5 +668,5 @@ def configure(){
 }
 
 def getInHomeURL() {
-   [InHomeURL: cameraRTSP]
+   [InHomeURL: rtsp://${CameraUser}:${CameraPassword}@${VideoIP}:${VideoPort}/OVProfile00]
 }
