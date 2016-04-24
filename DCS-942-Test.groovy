@@ -668,5 +668,5 @@ def configure(){
 }
 
 def getInHomeURL() {
-   [InHomeURL: rtsp://${CameraUser}:${CameraPassword}@${VideoIP}:${VideoPort}/OVProfile00]
+   [InHomeURL: "rtsp://${CameraUser}:${CameraPassword}@${VideoIP}:${VideoPort}/OVProfile00"]
 }
